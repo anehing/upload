@@ -1,0 +1,7 @@
+
+/public/audios
+/public/images
+.DS_Store
+access.log
+error.log
+
