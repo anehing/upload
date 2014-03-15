@@ -76,12 +76,14 @@ module.exports = function(app){
 					resultNumber: 1,
 					resultMessage:  err
 				});
+				return;
 			}
 			if(results.length>0){
 				res.json(400,{ 
 					resultNumber: 1,
 					resultMessage:  '用户已存在'
 				});
+				return;
 			}
 			//如果不存在则新增用户
 			newUser.save(function(err,results){
@@ -90,83 +92,146 @@ module.exports = function(app){
 						resultNumber: 1,
 						resultMessage:  err
 					});
+					return;
 				}
 				res.json(200,{ 
 					resultNumber: 0,
 					resultMessage: '注册成功!'
 				});
+				return;
 			});
 		});
 	});
-	// 
-	// //请求查询页面
-	// app.get('/find',function(req,res){
-	// 	res.render('find',{
-	// 		title: '查询'
-	// 	});
-	// });
-	// //查询用户信息
-	// app.post('/find',function(req,res){
-	// 	var username =req.body.username;
-	// 	if(username==""){
-	// 		res.json(400,{ 
-	// 			resultNumber:  2,
-	// 			resultMessage:  '用户名不能为空'
-	// 		});
-	// 	}
-	// 	//查询账户
-	// 	User.get(username,function(err,results){
-	// 		if(err){
-	// 			res.json(400,{ 
-	// 				resultNumber: 1,
-	// 				resultMessage:  err
-	// 			});
-	// 		}
-	// 		if(results.length==0){
-	// 			res.json(400,{ 
-	// 				resultNumber: 1,
-	// 				resultMessage:  '用户不存在'
-	// 			});
-	// 		}
-	// 		var name = results[name];
-	// 		res.json(200,{ 
-	// 			resultNumber: 0,
-	// 			resultMessage:  '查询成功',
-	// 			name: results[0].name,
-	// 			username: results[0].username,
-	// 			email: results[0].email
-	// 		});
-	// 	});
-	// });
-	// 
-	// //删除页面
-	// app.get('/remove',function(req,res){
-	// 	res.render('remove',{
-	// 		title: '注销'
-	// 	});
-	// });
-	// //删除用户信息
-	// app.post('/remove',function(req,res){
-	// 	var username =req.body.username;	
-	// 	if(username==""){
-	// 		res.json(400,{ 
-	// 			resultNumber: 2,
-	// 			resultMessage:  '用户名不能为空'
-	// 		});
-	// 	}
-	// 	User.remove(username,function(err,results){
-	// 		if(err){
-	// 			res.json(400,{ 
-	// 				resultNumber: 1,
-	// 				resultMessage:  err
-	// 			});
-	// 		}
-	// 		res.json(200,{ 
-	// 			resultNumber: 0,
-	// 			resultMessage:  '删除成功',
-	// 		});
-	// 	});
-	// });
+	
+	//请求查询页面
+	app.get('/find',function(req,res){
+		res.render('find',{
+			title: '查询'
+		});
+	});
+	//查询用户信息
+	app.post('/find',function(req,res){
+		var username =req.body.username;
+		var name =req.body.name;
+		var email =req.body.email;	
+		if(username=="" && name=="" && email==""){
+			res.json(400,{ 
+				resultNumber:  2,
+				resultMessage:  '用户名,昵称，邮箱不能全为空'
+			});
+			return;
+		}
+		var newUser = new User({
+			username: username,
+			name: name,
+			email: email
+		});
+		//查询账户
+		User.getlist(newUser,function(err,results){
+			if(err){
+				res.json(400,{ 
+					resultNumber: 1,
+					resultMessage:  err
+				});
+				return;
+			}
+			if(results.length==0){
+				res.json(400,{ 
+					resultNumber: 1,
+					resultMessage:  '暂无无相关用户信息'
+				});
+				return;
+			}
+			res.json(200,{ 
+				resultNumber: 0,
+				resultMessage:  '查询成功',
+				userList: results
+			});
+			return;
+		});
+	});
+	
+	//删除页面
+	app.get('/remove',function(req,res){
+		res.render('remove',{
+			title: '注销'
+		});
+	});
+	//删除用户信息
+	app.post('/remove',function(req,res){
+		var username =req.body.username;	
+		if(username==""){
+			res.json(400,{ 
+				resultNumber: 2,
+				resultMessage:  '用户名不能为空'
+			});
+			return;
+		}
+		User.remove(username,function(err,results){
+			if(err){
+				res.json(400,{ 
+					resultNumber: 1,
+					resultMessage:  err
+				});
+				return;
+			}
+			res.json(200,{ 
+				resultNumber: 0,
+				resultMessage:  '删除成功',
+			});
+			return;
+		});
+	});
+	//修改页面
+	app.get('/edit',function(req,res){
+		res.render('edit',{
+			title: '修改'
+		});
+	});
+	//修改用户信息
+	app.post('/edit',function(req,res){
+		
+		var username = req.body.username,
+			name = req.body.name,
+			password = req.body.password,
+			email = req.body.email;
+		var newUser2 = new User({
+			username: username,
+			name: name,
+			password: password,
+			email: email
+		});
+		User.get(username,function(err,results){
+			if(err){
+				res.json(400,{ 
+					resultNumber: 1,
+					resultMessage:  '更新异常，稍后尝试，或者联系管理员'
+				});
+				return;
+			}
+			if(results.length<=0){
+				res.json(400,{ 
+					resultNumber: 1,
+					resultMessage:  '用户不存在'
+				});
+				return;
+			}
+		});
+		User.edit(newUser2,function(err,results){
+			if(err){
+				res.json(400,{ 
+					resultNumber: 1,
+					resultMessage:  '更新失败'
+				});
+				return;
+			}
+			res.json(200,{ 
+				resultNumber: 0,
+				resultMessage:  '更新成功'
+			});
+			return;
+		});
+	});
 	// 
 	// 
 	// 
