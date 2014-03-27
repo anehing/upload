@@ -3,6 +3,7 @@ var fs = require('fs'),
     path = require('path');
 var Blowfish = require('blowfish');
 var User = require('../models/user.js');
+var host = require('../host');
 module.exports = function(app){
 	
 	app.get('/upload', function (req, res) {
@@ -12,26 +13,42 @@ module.exports = function(app){
 	});	
 	app.post('/upload', function (req, res) {
 		if (!req.files){
-		} else {	
-			var date = new Date();
-			var type = req.files.file.type;	
-			if(type.indexOf("image")>=0){
-				var typepath = "images/";
-			}else{
-				var typepath = "audios/";
-			}
-			var dateurl=typepath + req.body.name +"/"+ date.getFullYear() + (date.getMonth() + 1) + date.getDate()+"/";
-			var target_path =  './public/' +dateurl;
-			mkdir(target_path);
- 			fs.rename(req.files.file.path, target_path + req.files.file.name,function(err){
+		} else {
+			User.get(req.body.name,function(err,results){
 				if(err){
-					res.json(500,{ status: 'error' });
-				}else{
-					res.json(200,{ 
-						status: 'success' ,
-						uri:  'http://14.23.162.138:3000/'+ dateurl + req.files.file.name
+					res.json(400,{ 
+						resultNumber: 1,
+						resultMessage:  err
 					});
+					return;
 				}
+				if(results.length<=0){
+					res.json(400,{ 
+						resultNumber: 1,
+						resultMessage:  '用户不已存在'
+					});
+					return;
+				}	
+				var date = new Date();
+				var type = req.files.file.type;	
+				if(type.indexOf("image")>=0){
+					var typepath = "images/";
+				}else{
+					var typepath = "audios/";
+				}
+				var dateurl=typepath + req.body.name +"/"+ date.getFullYear() + (date.getMonth() + 1) + date.getDate()+"/";
+				var target_path =  './public/' +dateurl;
+				mkdir(target_path);
+	 			fs.rename(req.files.file.path, target_path + req.files.file.name,function(err){
+					if(err){
+						res.json(500,{ status: 'error' });
+					}else{
+						res.json(200,{ 
+							status: 'success' ,
+							uri:  host.uri+ dateurl + req.files.file.name
+						});
+					}
+				});
 			});
 		}
 	});

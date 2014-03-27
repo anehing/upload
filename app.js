@@ -11,7 +11,6 @@ var flash = require('connect-flash');
 var fs = require('fs');
 var accessLog = fs.createWriteStream('access.log',{flags: 'a'});
 var errorLog = fs.createWriteStream('error.log',{flags:'a'});
-
 var app = express();
 
 // all environments
@@ -40,7 +39,6 @@ if ('development' == app.get('env')) {
 }
 
 routes(app);
-
 http.createServer(app).listen(app.get('port'), function(){
 
 	console.log('Express server listening on port ' + app.get('port'));
